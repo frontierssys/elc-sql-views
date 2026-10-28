@@ -1,0 +1,6 @@
+CREATE   VIEW [dbo].[PV_VIRTUAL_SET_SUMMARY] AS
+select pvsh.COMPANY_CODE ,pvsh.SKU_CODE ,pvsh.REF_SKU_DESC ,SUM(pvsd.QUANTITY) as SET_QTY
+from PM_VIRTUAL_SET_H pvsh
+inner Join PM_VIRTUAL_SET_D pvsd on pvsh.VIRTUAL_SET_H_ID =pvsd.VIRTUAL_SET_H_ID_FK
+--where pvsh.SKU_CODE ='ELTW30F4200000'
+group by pvsh.COMPANY_CODE ,pvsh.SKU_CODE ,pvsh.REF_SKU_DESC

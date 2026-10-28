@@ -1,0 +1,7 @@
+CREATE view [dbo].[PV_VIP_POINT_BY_TRANSACTION] as
+select psm.SALES_MEMO_ID , sum(pvbm.POINT_MOVEMENT) as POINTS
+from PT_SALES_MEMO psm
+inner join PL_VIP_BP_MOVEMENT pvbm
+    on pvbm.ORDER_NO = psm.MEMO_NO
+    and pvbm.COMPANY_CODE = psm.COMPANY_CODE
+GROUP by psm.SALES_MEMO_ID

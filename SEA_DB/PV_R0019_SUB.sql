@@ -1,0 +1,137 @@
+CREATE   view [dbo].[PV_R0019_SUB] as
+select
+    pc.COMPANY_CODE ,
+    pc.COMPANY_DESC ,
+    idafh.DOC_ID,
+    idafh.DOC_TYPE ,
+    CAST(idafh.CRE_DATET as DATE) as DATE_INITIATED,
+    idafh.CRE_BY as INITIATED_BY_ID,
+    ps.FIRST_NAME as INITIATED_BY_NAME,
+    --idafh.OVERALL_APPROVAL_STATUS as STATUS,
+    CASE
+        WHEN idafh.OVERALL_APPROVED_BY ='TRAN_VAR_AUTO_APPROVE' THEN 'Auto Generated'
+        ELSE idafh.OVERALL_APPROVAL_STATUS
+    END as STATUS,
+    idafh.OVERALL_APPROVED_BY ,
+    CAST (idafh.OVERALL_APPROVE_DT as DATE) as DATE_CLOSED,
+    coalesce(pl.LOCATION_CODE,pl2.LOCATION_CODE, pl4.LOCATION_CODE, pl5.LOCATION_CODE ) as SOURCE_STORE_ID,
+    coalesce(pl.LOCATION_NAME ,pl2.LOCATION_NAME, pl4.LOCATION_NAME, pl5.LOCATION_NAME ) as SOURCE_STORE_NAME,
+    coalesce(pl.CITY_TXT ,
+        pl2.CITY_TXT ,
+        pl4.CITY_TXT ,
+        pl5.CITY_TXT  ) as SOURCE_STORE_LOCATION,
+    coalesce(pst.STORE_TYPE_CODE ,pst2.STORE_TYPE_CODE , pst4.STORE_TYPE_CODE , pst5.STORE_TYPE_CODE ) as SOURCE_STORE_TYPE,
+    coalesce(itrd.SKU_CODE , iiad.SKU_CODE, irtwd.SKU_CODE, ibtd.SKU_CODE ) as SKU_10,
+    coalesce(ps1.SKU_ID , ps2.SKU_ID , ps3.SKU_ID ,ps4.SKU_ID  ) as SKU_ID,
+    coalesce(pi1.ITEM_DESC_1 , pi2.ITEM_DESC_1, pi3.ITEM_DESC_1, pi4.ITEM_DESC_1 ) as ITEM_DESCRIPTION,
+    --coalesce(itrd.QTY , iiad.QTY, irtwd.QTY, ibtd.QTY ) as QTY,
+    coalesce(itrd.QTY*-1 ,
+        CASE
+            WHEN CHARINDEX(iiah.REASON_CODE,'ADJ2,ADJ20,ADJ20G,ADJ20T,ADJ21,ADJ21G,ADJ21T,ADJ2G,ADJ2T,ADJTU')>0 THEN iiad.QTY*-1
+            ELSE iiad.QTY
+        END, irtwd.QTY*-1, ibtd.QTY*-1 ) as QTY,
+    COALESCE(itrh.FROM_BALANCE , iiah.ADJ_BALANCE , irtwh.FROM_BALANCE , ibth.FROM_BALANCE ) as INVENTORY_TYPE,
+    pl3.LOCATION_CODE as DESTINATION_STORE_ID,
+    pl3.LOCATION_NAME as DESTINATION_STORE_NAME,
+    pl3.CITY_TXT as DESTINATION_STORE_LOCATION,
+    pst3.STORE_TYPE_CODE as DESTINATION_STORE_TYPE,
+    irtwh.GR_NO as RTW_REFERENCE,
+    CAST(pad2.APPOVE_DATE_1 as DATE) as APPOVE_DATE_1 ,
+    pad2.APPROVER_EMPLOYEE_ID_1 ,
+    pad2.APPROVER_EMPLOYEE_NAME_1,
+    CAST(pad2.APPOVE_DATE_2 as DATE) as APPOVE_DATE_2,
+    pad2.APPROVER_EMPLOYEE_ID_2 ,
+    pad2.APPROVER_EMPLOYEE_NAME_2,
+    CAST(pad2.APPOVE_DATE_3 as DATE) as APPOVE_DATE_3,
+    pad2.APPROVER_EMPLOYEE_ID_3 ,
+    pad2.APPROVER_EMPLOYEE_NAME_3,
+    CAST(pad2.APPOVE_DATE_4 as DATE) as APPOVE_DATE_4,
+    pad2.APPROVER_EMPLOYEE_ID_4 ,
+    pad2.APPROVER_EMPLOYEE_NAME_4,
+    CAST(pad2.APPOVE_DATE_5 as DATE) as APPOVE_DATE_5,
+    pad2.APPROVER_EMPLOYEE_ID_5 ,
+    pad2.APPROVER_EMPLOYEE_NAME_5,
+    CAST(pad2.APPOVE_DATE_6 as DATE) as APPOVE_DATE_6,
+    pad2.APPROVER_EMPLOYEE_ID_6 ,
+    pad2.APPROVER_EMPLOYEE_NAME_6
+    --coalesce(itrh.FROM_BALANCE, iiah.ADJ_BALANCE, irtwh.FROM_BALANCE ) as INVENTORY_TYPE
+from IT_DOC_APPROVAL_FLOW_H idafh
+inner join PM_COMPANY pc
+    on idafh.COMPANY_CODE = pc.COMPANY_CODE
+left join PM_USER pu
+    on idafh.COMPANY_CODE = pu.COMPANY_CODE
+    and idafh.CRE_BY = pu.USER_CODE
+left join PM_STAFF ps
+    on pu.STAFF_ID_FK = ps.STAFF_ID
+left join IT_TRANSFER_REQUEST_H itrh
+    on idafh.DOC_ID = itrh.REQ_NO
+    and idafh.COMPANY_CODE = itrh.COMPANY_CODE
+    and idafh.DOC_TYPE = 'TRANSFER_REQUEST'
+left join PM_LOCATION pl
+    on pl.LOCATION_CODE = itrh.OUT_LOCATION_CODE
+    and pl.COMPANY_CODE = itrh.COMPANY_CODE
+left join PM_STORE_TYPE pst
+    on pl.STORE_TYPE_ID_FK = pst.STORE_TYPE_ID
+left join PM_LOCATION pl3
+    on pl3.LOCATION_CODE = itrh.IN_LOCATION_CODE
+    and pl3.COMPANY_CODE = itrh.COMPANY_CODE
+left join IT_TRANSFER_REQUEST_D itrd
+    on itrd.TRANSFER_REQ_H_ID_FK = itrh.TRANSFER_REQ_H_ID
+left join PM_SKU ps1
+    on itrd.COMPANY_CODE = ps1.COMPANY_CODE
+    and itrd.SKU_CODE = ps1.SKU_CODE
+left join PM_ITEM pi1
+    on ps1.ITEM_ID_FK = pi1.ITEM_ID
+left join IT_INVENTORY_ADJUSTMENT_H iiah
+    on idafh.COMPANY_CODE = iiah.COMPANY_CODE
+    and idafh.DOC_ID = iiah.ADJUSTMENT_NO
+    and idafh.DOC_TYPE = 'INVENTORY_ADJUSTMENT'
+left join PM_LOCATION pl2
+    on pl2.LOCATION_CODE = iiah.ADJUST_LOCATION_CODE
+    and pl2.COMPANY_CODE = iiah.COMPANY_CODE
+left join PM_STORE_TYPE pst2
+    on pl2.STORE_TYPE_ID_FK = pst2.STORE_TYPE_ID
+left join IT_INVENTORY_ADJUSTMENT_D iiad
+    on iiah.INVENTORY_ADJ_H_ID = iiad.INVENTORY_ADJ_H_ID_FK
+left join PM_SKU ps2
+    on iiad.COMPANY_CODE = ps2.COMPANY_CODE
+    and iiad.SKU_CODE = ps2.SKU_CODE
+left join PM_ITEM pi2
+    on ps2.ITEM_ID_FK = pi2.ITEM_ID
+left join IT_RETURN_TO_WAREHOUSE_H irtwh
+    on idafh.COMPANY_CODE = irtwh.COMPANY_CODE
+    and idafh.DOC_ID = irtwh.RTW_NO
+    and idafh.DOC_TYPE = 'RETURN_TO_WAREHOUSE'
+left join PM_LOCATION pl4
+    on pl4.LOCATION_CODE = irtwh.LOCATION_CODE
+    and pl4.COMPANY_CODE = irtwh.COMPANY_CODE
+left join PM_STORE_TYPE pst4
+    on pl4.STORE_TYPE_ID_FK = pst4.STORE_TYPE_ID
+left join IT_RETURN_TO_WAREHOUSE_D irtwd
+    on irtwh.RTW_H_ID = irtwd.RTW_H_ID_FK
+left join PM_SKU ps3
+    on irtwd.COMPANY_CODE = ps3.COMPANY_CODE
+    and irtwd.SKU_CODE = ps3.SKU_CODE
+left join PM_ITEM pi3
+    on ps3.ITEM_ID_FK = pi3.ITEM_ID
+left join IT_BALANCE_TRANSFER_H ibth
+    on idafh.COMPANY_CODE = ibth.COMPANY_CODE
+    and idafh.DOC_ID = ibth.TRANSFER_NO
+    and idafh.DOC_TYPE = 'BALANCE_TRANSFER'
+left join PM_LOCATION pl5
+    on pl5.LOCATION_CODE = ibth.TRANS_LOCATION_CODE
+    and pl5.COMPANY_CODE = ibth.COMPANY_CODE
+left join PM_STORE_TYPE pst5
+    on pl5.STORE_TYPE_ID_FK = pst5.STORE_TYPE_ID
+left join IT_BALANCE_TRANSFER_D ibtd
+    on ibth.BAL_TRANSFER_H_ID = ibtd.BAL_TRANSFER_H_ID_FK
+left join PM_SKU ps4
+    on ibtd.COMPANY_CODE = ps4.COMPANY_CODE
+    and ibtd.SKU_CODE = ps4.SKU_CODE
+left join PM_ITEM pi4
+    on ps4.ITEM_ID_FK = pi4.ITEM_ID
+left join PMV_APPROVAL_DETAIL pad2
+    on pad2.DOC_APPROVAL_FLOW_H_ID_FK = idafh.DOC_APPROVAL_FLOW_H_ID
+left join PM_STORE_TYPE pst3 on
+    pl3.STORE_TYPE_ID_FK = pst3.STORE_TYPE_ID
+where idafh.DOC_TYPE in ('TRANSFER_REQUEST', 'INVENTORY_ADJUSTMENT', 'RETURN_TO_WAREHOUSE',  'BALANCE_TRANSFER')

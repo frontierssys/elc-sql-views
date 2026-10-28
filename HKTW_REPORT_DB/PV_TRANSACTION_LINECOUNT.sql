@@ -1,0 +1,6 @@
+CREATE view [dbo].[PV_TRANSACTION_LINECOUNT] as
+select psm.SALES_MEMO_ID , count(psmih.SALES_MEMO_ITEM_H_ID) as LINECOUNT
+from PT_SALES_MEMO psm
+inner join PT_SALES_MEMO_ITEM_H psmih
+    on psm.SALES_MEMO_ID = psmih.SALES_MEMO_ID_FK
+group by psm.SALES_MEMO_ID

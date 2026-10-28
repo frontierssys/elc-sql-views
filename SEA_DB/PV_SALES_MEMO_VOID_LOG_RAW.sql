@@ -1,0 +1,55 @@
+-- dbo.PV_SALES_MEMO_VOID_LOG_RAW source
+
+CREATE   view [dbo].[PV_SALES_MEMO_VOID_LOG_RAW]
+--WITH SCHEMABINDING
+AS
+SELECT
+    oripsm.COMPANY_CODE,
+    pc.COMPANY_DESC,
+    pst.STORE_TYPE_NAME,
+    pl.LOCATION_DESC,
+    pl.LOCATION_CODE,
+    pl.LOCATION_NAME,
+    oripsm.SALES_MEMO_ID,
+    oripsm.CRE_BY ORI_CRE_BY,
+    CONVERT ( VARCHAR ( 10 ), oripsm.TX_DT, 126 ) tx_dt,
+    SUM(oripsm.TOTAL_NET_AMT) TOTAL_NET_AMT,
+    count_big( * ) c
+FROM
+    dbo.PT_SALES_MEMO oripsm,
+    dbo.PM_LOCATION pl,
+    dbo.PM_STORE_TYPE pst,
+    dbo.PM_COMPANY pc,
+    dbo.PR_POS_REPORT_SUP pprs
+WHERE
+    oripsm.MEMO_STATUS  = 'VOIDED'
+    AND pl.STORE_TYPE_ID_FK = pst.STORE_TYPE_ID
+    AND pc.COMPANY_CODE = oripsm.COMPANY_CODE
+    AND pl.LOCATION_ID = oripsm.LOCATION_ID_FK
+    AND oripsm.TX_DT > pprs.MV_DT
+GROUP BY
+    oripsm.COMPANY_CODE,
+    pc.COMPANY_DESC,
+    pst.STORE_TYPE_NAME,
+    pl.LOCATION_DESC,
+    pl.LOCATION_CODE,
+    pl.LOCATION_NAME,
+    pl.LOCATION_CODE,
+    CONVERT ( VARCHAR ( 10 ), oripsm.TX_DT, 126 ),
+    oripsm.CRE_BY ,
+    oripsm.SALES_MEMO_ID
+UNION
+SELECT
+    COMPANY_CODE,
+    COMPANY_DESC,
+    STORE_TYPE_NAME,
+    LOCATION_DESC,
+    LOCATION_CODE,
+    LOCATION_NAME,
+    SALES_MEMO_ID,
+    ORI_CRE_BY,
+    tx_DT,
+    TOTAL_NET_AMT,
+    c
+FROM
+    dbo.PMV_SALES_MEMO_VOID_LOG

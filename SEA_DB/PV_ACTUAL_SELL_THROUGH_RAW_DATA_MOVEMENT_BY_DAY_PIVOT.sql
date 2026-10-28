@@ -1,0 +1,26 @@
+CREATE  VIEW [dbo].[PV_ACTUAL_SELL_THROUGH_RAW_DATA_MOVEMENT_BY_DAY_PIVOT] AS
+SELECT COMPANY_CODE,
+    LOCATION_CODE,
+    SKU_10,
+    left(SKU_10,6) SKU_6,
+    MOVEMENT_DATE,
+    BALANCE,
+    isnull(sum([SOH]), 0) as SOH_QTY,
+    isnull(sum([IN-TRANSIT]), 0) as IN_TRANSIT_QTY,
+    isnull(sum([SELL-THROUGH]), 0) as SELL_THROUGH_QTY
+from
+    (
+        Select pastdmbd.COMPANY_CODE , pastdmbd.LOCATION_CODE , pastdmbd.MOVEMENT_TYPE , pastdmbd.SKU_10 ,pastdmbd.MOVEMENT_DATE, pastdmbd.BALANCE,pastdmbd.MOVEMENT_QTY
+        from PV_ACTUAL_SELL_THROUGH_RAW_DATA_MOVEMENT_BY_DAY pastdmbd
+    ) d
+PIVOT
+    (
+        SUM(MOVEMENT_QTY)
+        for MOVEMENT_TYPE in ([SOH], [SELL-THROUGH], [IN-TRANSIT])
+    ) piv
+    --where COMPANY_CODE='HKEL'
+GROUP BY
+    COMPANY_CODE,
+    LOCATION_CODE,
+    SKU_10,
+    MOVEMENT_DATE,BALANCE

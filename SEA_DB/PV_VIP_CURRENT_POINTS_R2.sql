@@ -1,0 +1,15 @@
+CREATE VIEW [dbo].[PV_VIP_CURRENT_POINTS_R2] AS
+select COMPANY_CODE, VIP_NO, sum(POINTS) as POINTS
+from (
+    SELECT pvbm.COMPANY_CODE ,pvbm.VIP_NO,sum(pvbm.POINT_MOVEMENT) as POINTS
+    FROM dbo.PL_VIP_BP_MOVEMENT pvbm
+    --where pvbm.VIP_NO ='HQ000002213'
+    group by pvbm.COMPANY_CODE ,pvbm.VIP_NO
+    UNION
+    select pvbb.COMPANY_CODE ,pv.VIP_NO , SUM(pvbb.BALANCE) as POINTS
+    from PL_VIP_BP_BALANCE pvbb
+    inner JOIN PM_VIP pv ON PV.COMPANY_CODE=pvbb.COMPANY_CODE and pv.VIP_ID =pvbb.VIP_ID_FK
+    --where PV.VIP_NO ='HQ000002213'
+    group by pvbb.COMPANY_CODE ,pv.VIP_NO
+) A
+group by COMPANY_CODE, VIP_NO

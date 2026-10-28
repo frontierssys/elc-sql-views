@@ -1,0 +1,17 @@
+CREATE   view PV_ORIG_MEMO_BY_TRANSACTION AS
+SELECT
+    DISTINCT psmih.SALES_MEMO_ID_FK as SALES_MEMO_ID,
+    stuff((
+        SELECT
+            DISTINCT ',' + psmid.ORIG_MEMO_NO
+        FROM
+            PT_SALES_MEMO_ITEM_D psmid
+        WHERE
+            psmid.ORIG_MEMO_NO is not null
+            and psmih.SALES_MEMO_ITEM_H_ID = psmid.SALES_MEMO_ITEM_H_ID_FK
+        FOR XML PATH('')),
+        1,
+        1,
+        '') as ORIG_MEMO_NO
+FROM
+    PT_SALES_MEMO_ITEM_H psmih;

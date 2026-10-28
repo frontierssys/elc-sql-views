@@ -1,0 +1,76 @@
+-- dbo.PV_R0038_STORE_CREDIT source
+
+-- dbo.PV_R0038_STORE_CREDIT source
+
+CREATE   VIEW [dbo].[PV_R0038_STORE_CREDIT] AS
+SELECT
+    psm.COMPANY_CODE ,
+    pl.LOCATION_CODE as LOCATION_CODE,
+    psm.COMPANY_CODE as DIVISION,
+    --'Store Credit Issue' as ORDER_TYPE,
+    pt.tender_name as ORDER_TYPE,
+    pst.STORE_TYPE_CODE as STORE_TYPE_NAME,
+    pl.CITY_TXT as STORE_LOCATION,
+    pl.LOCATION_CODE as STORE_ID,
+    pl.LOCATION_NAME as STORE_NAME,
+    --'Store Credit Issue' as LIABILITY_TYPE,
+    'Store Credit' as LIABILITY_TYPE,
+    --psm.MEMO_NO as LIABILITY_ID,
+    psmpa.STORE_CREDIT_NO as LIABILITY_ID,
+    'Store Credit' as LIABILITY_DESCRIPTION,
+    pt.TENDER_NAME as TRAN_TYPE,
+    --case when psmp.SALES_MEMO_PAYMENT_ID is null then 'OPEN' else 'CLOSE' end as STATUS,
+    --CASE WHEN pt.tender_code ='106' then 'OPEN' else   'CLOSE' END as STATUS,
+    CASE
+        WHEN b.NET_BAL <>0 AND pt.TENDER_CODE ='106' then 'OPEN'
+        else 'CLOSE'
+    END as STATUS,--Check again
+    psm.MEMO_NO as TRANSACTION_NUMBER,
+    CAST(psm.TX_DT as date) as TX_DATE,
+    CAST(psm.TX_DT as time) as TRANSACTION_TIME,
+    psm.CASHIER_CODE as BA_ID,
+    ps22.FIRST_NAME + ' ' + ps22.LAST_NAME as BA_NAME,
+    pv.VIP_NO as CUSTOMER_ID,
+    pc.FIRSTNAME + ' ' + pc.SURNAME as CUSTOMER_NAME,
+    'NA' as SKU10,
+    'NA' as SKU6 ,
+    'NA' as SKU4 ,
+    'NA' as PRODUCT_DESCRIPTION,
+    0 as QUANTITY,
+    -- SUM(psmp.AMOUNT) as SALES_AMOUNT, -- visa+store credit
+    psmp.AMOUNT,
+    SUM(a.REMAINING_BAL) as REMAINING_BALANCE,
+    -- a.REMAINING_BAL,
+    CAST (psm.TX_DT as date) as ORIGINAL_PURCHASE_DATE,
+    DATEDIFF(day,CAST (psm.TX_DT as date),GETDATE()) as DAYS_SINCE_POURCHASE_DATE,
+    GETDATE()+365 as EXPIRATION_DATE,
+    CASE
+        when DATEDIFF(day, GETDATE(), CAST(psm.RESERVE_EXP_DT as date)) < 0 then 'Y'
+        ELSE 'N'
+    END as EXPIRED
+FROM
+    PT_SALES_MEMO psm
+INNER JOIN PM_SALES_MEMO_TYPE psmt on psmt.SALES_MEMO_TYPE_ID = psm.SALES_MEMO_TYPE_ID_FK
+INNER JOIN PT_SALES_MEMO_PAYMENT psmp on psm.SALES_MEMO_ID = psmp.SALES_MEMO_ID_FK
+INNER JOIN PM_TENDER pt on psmp.TENDER_ID_FK = pt.TENDER_ID
+INNER JOIN PT_SALES_MEMO_PAYMENT_ATTR psmpa on psmpa.SALES_MEMO_PAYMENT_ATTR_ID = psmp.SALES_MEMO_PAYMENT_ATTR_ID_FK
+INNER JOIN PM_LOCATION pl on pl.LOCATION_ID = psm.LOCATION_ID_FK
+INNER JOIN PM_STORE_TYPE pst on pst.STORE_TYPE_ID = pl.STORE_TYPE_ID_FK
+LEFT JOIN PM_VIP pv on pv.COMPANY_CODE = psm.COMPANY_CODE and pv.VIP_NO = psm.VIP_NO
+LEFT JOIN PM_CUSTOMER pc on  pv.CUSTOMER_ID_FK = pc.CUSTOMER_ID
+LEFT JOIN (
+    select CARD_NO,MOVEMENT_DT,sum(MOVEMENT_AMT) as REMAINING_BAL
+    from PL_GIFT_CARD_LOG pgcl
+    group by CARD_NO, MOVEMENT_DT) a ON a.CARD_NO=psmpa.STORE_CREDIT_NO --and a.MOVEMENT_DT<= psm.TX_DT
+LEFT JOIN (
+    select CARD_NO,sum(MOVEMENT_AMT) as NET_BAL
+    from PL_GIFT_CARD_LOG pgcl
+    group by CARD_NO) b ON b.CARD_NO=psmpa.STORE_CREDIT_NO
+LEFT join dbo.PM_STAFF ps22 on ps22.COMPANY_CODE = psm.COMPANY_CODE and ps22.STAFF_CODE = psm.CASHIER_CODE
+where  (isnull(psmt.TYPE_CODE,0) <> '09' and isnull(psm.MEMO_STATUS,0) <> 'VOIDED')
+    and PT.TENDER_CODE IN ('105','106')
+    --and  psm.MEMO_NO in ('HKBB0016010J21000314','HKBB0016010J21000316')
+GROUP BY psm.COMPANY_CODE ,pl.LOCATION_CODE,pst.STORE_TYPE_CODE,pl.CITY_TXT,pl.LOCATION_CODE,
+    pl.LOCATION_NAME,psm.MEMO_NO,pt.tender_name,psmp.SALES_MEMO_PAYMENT_ID,  psmpa.STORE_CREDIT_NO,pt.tender_code,psm.CASHIER_CODE,
+    psm.MEMO_NO,psm.TX_DT,psm.TX_DT,ps22.STAFF_CODE,pv.VIP_NO,ps22.FIRST_NAME,ps22.LAST_NAME,psm.RESERVE_EXP_DT,psmp.AMOUNT,
+    PC.SURNAME,PC.FIRSTNAME,b.NET_BAL

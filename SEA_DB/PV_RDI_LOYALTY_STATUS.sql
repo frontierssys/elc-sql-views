@@ -1,0 +1,37 @@
+CREATE   view PV_RDI_LOYALTY_STATUS as
+select
+    pv.COMPANY_CODE,
+    case
+        when pc.COUNTRY_CODE_ISO3 is not null then pc.COUNTRY_CODE_ISO3
+        else pc2.COUNTRY_CODE_ISO3
+    end as COUNTRY_CODE_ISO3,
+    pv.VIP_NO,
+    pva.VIP_CBR_ID,
+    plp.PROGRAM_CODE,
+    plp.PROGRAM_DESC,
+    pvg.VIP_GRADE_CODE,
+    pvg.VIP_GRADE_DESCRIPTION,
+    pv.APPLY_LOCATION,
+    pv.JOIN_DT,
+    pva2.INACTIVATION_DATE,
+    pvt.START_DATE,
+    --	pv.START_DT as START_DATE,
+    --	pvt.EXPIRY_DAY,
+    pv.EXPIRY_DT as EXPIRY_DAY,
+    pv.STATUS,
+    --case when pcvop.POINTS is null then 0 else pcvop.POINTS end as POINT,
+    pvbcb.CURRENT_POINT_BALANCE as POINT,
+    pvbm.MOVEMENT_DT,
+    pva2.BONUS_EXP_DT as POINT_EXPIRY_DATE
+FROM PM_VIP pv
+left join PL_VIP_BP_MOVEMENT pvbm on pvbm.COMPANY_CODE = pv.COMPANY_CODE and pvbm.VIP_NO = pv.VIP_NO
+INNER join PM_VIP_TYPE pvt on pv.VIP_TYPE_ID_FK = pvt.VIP_TYPE_ID
+INNER join PM_VIP_ATTR pva2 on pva2.VIP_ATTR_ID = pv.VIP_ATTR_ID_FK
+INNER join PM_VIP_GRADE pvg on pvt.VIP_GRADE_ID_FK = pvg.VIP_GRADE_ID
+INNER join PM_LOYALTY_PROGRAM plp on plp.LOYALTY_PROGRAM_ID = pv.LOYALTY_PROGRAM_ID_HK
+LEFT join PM_LOCATION pl on   pl.COMPANY_CODE = pv.COMPANY_CODE and  pl.LOCATION_CODE = pv.APPLY_LOCATION
+LEFT join PM_COUNTRY pc on pl.COUNTRY_ID_FK = pc.COUNTRY_ID
+LEFT JOIN PM_LOCATION pl2 on pl2.COMPANY_CODE = pv.COMPANY_CODE and pl2.LOCATION_CODE = pl2.COMPANY_CODE + 'ONLI'
+LEFT join PM_COUNTRY pc2 on pl2.COUNTRY_ID_FK = pc2.COUNTRY_ID
+left join PV_VIP_BP_CURRENT_BALANCE pvbcb on pvbcb.VIP_ID = pv.VIP_ID
+left join PM_VIP_ALT pva on pva.COMPANY_CODE = pv.COMPANY_CODE and pva.VIP_ALT_SYSTEM = 'FRONTIERS' and pva.VIP_ALT_KEY = pv.VIP_NO
