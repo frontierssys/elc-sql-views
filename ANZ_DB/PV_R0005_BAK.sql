@@ -1,0 +1,6 @@
+CREATE   VIEW PV_R0005_BAK as
+select *
+from PMV_SALES_STORE_SKU_DEMOGRAPHIC_VIP pssdv
+union all
+select *
+from PMV_SALES_STORE_SKU_DEMOGRAPHIC_WALKIN pssdw

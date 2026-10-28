@@ -1,0 +1,5 @@
+CREATE   view PV_VIP_GRADE as
+select pvg.COMPANY_CODE ,pvg.VIP_GRADE_CODE,pv.VIP_NO,pvg.CRE_DATET , pvg.UPDATE_DATET
+from PM_VIP_TYPE pvt
+inner join PM_VIP_GRADE pvg on pvg.VIP_GRADE_ID =pvt.VIP_GRADE_ID_FK and pvg.COMPANY_CODE =pvt.COMPANY_CODE
+inner join PM_VIP pv on pv.VIP_TYPE_ID_FK =pvt.VIP_TYPE_ID and pv.COMPANY_CODE =pvt.COMPANY_CODE ;

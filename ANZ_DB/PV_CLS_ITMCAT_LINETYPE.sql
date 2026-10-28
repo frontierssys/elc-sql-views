@@ -1,0 +1,8 @@
+CREATE   VIEW  PV_CLS_ITMCAT_LINETYPE as
+select
+    pd.COMPANY_CODE as COMPANY_CODE,
+    pd.DEPT_CODE as CODE,
+    --pd.DEPT_NAME as 'DESC'
+    LEFT(REPLACE( DEPT_NAME , ',', ''),50) as 'DESC'
+    --pb as DESCRIPTION
+from PM_DEPT pd

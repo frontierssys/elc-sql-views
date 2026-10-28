@@ -92,14 +92,15 @@ inner join dbo.PV_SALES_TENDER_BY_TRANSACTION pstbt
 left join dbo.PMV_SALES_DISCOUNT_BY_ITEM_H psdbih
     on
     psdbih.SALES_MEMO_ITEM_H_ID = psfdv.SALES_MEMO_ITEM_H_ID
-    /*left join dbo.PMV_SALES_LOYALTY_MOVEMENT_BY_TRANSACTION pslmbt
-    on psfdv.COMPANY_CODE = pslmbt.COMPANY_CODE
-    -- psfdv.TRANSACTION_DATE=pslmbt.TXN_DATE
-    and psfdv.TRANSACTION_ID = pslmbt.POS_MEMO_NO */
-left join dbo.PXV_SALES_LOYALTY_MOVEMENT_BY_TRANSACTION pslmbt
+left join dbo.PMV_SALES_LOYALTY_MOVEMENT_BY_TRANSACTION pslmbt
     on
     psfdv.COMPANY_CODE = pslmbt.COMPANY_CODE
-    and psfdv.SALES_MEMO_ID = pslmbt.SALES_MEMO_ID
+    -- psfdv.TRANSACTION_DATE=pslmbt.TXN_DATE
+    and psfdv.TRANSACTION_ID = pslmbt.POS_MEMO_NO
+    /*left join dbo.PXV_SALES_LOYALTY_MOVEMENT_BY_TRANSACTION pslmbt
+    on
+    psfdv.COMPANY_CODE = pslmbt.COMPANY_CODE
+    and psfdv.SALES_MEMO_ID = pslmbt.SALES_MEMO_ID*/
 where
     psfdv.QUANTITY <> 0
 union all

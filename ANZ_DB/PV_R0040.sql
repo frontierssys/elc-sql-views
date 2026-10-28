@@ -1,0 +1,34 @@
+CREATE VIEW [dbo].[PV_R0040] as
+SELECT LEFT(pgcmbd.COMPANY_CODE,2) as AFFILIATE_CODE,
+    pgcmbd.COMPANY_CODE,
+    pgcmbd.GIFT_CARD_TYPE,
+    pgcmbd.CARD_NO,
+    pgcmbd.EXPIRY_DATE,
+    pgcmbd.MOVEMENT_DATE,
+    SUM(pgcmbd.BALANCE) as BALANCE
+FROM PV_GIFT_CARD_MOVEMENT_BY_DAY pgcmbd
+GROUP BY
+    pgcmbd.COMPANY_CODE,
+    pgcmbd.GIFT_CARD_TYPE,
+    pgcmbd.CARD_NO,
+    pgcmbd.EXPIRY_DATE,
+    pgcmbd.MOVEMENT_DATE
+UNION ALL
+SELECT LEFT(pvgcmbd.COMPANY_CODE,2) as AFFILIATE_CODE,
+    pvgcmbd.COMPANY_CODE,
+    pvgcmbd.GIFT_CARD_TYPE,
+    pvgcmbd.CARD_NO,
+    pvgcmbd.EXPIRY_DATE,
+    pvgcmbd.MOVEMENT_DATE,
+    SUM(pvgcmbd.BALANCE) as BALANCE
+FROM PV_VII_GIFT_CARD_MOVEMENT_BY_DAY pvgcmbd
+WHERE pvgcmbd.MOVEMENT_DATE = (
+    SELECT MAX(CRE_DATET)
+    FROM PL_VII_GIFT_CARD_TXN_LOG pvgctl1
+    WHERE pvgctl1.CARD_NUMBER = pvgcmbd.CARD_NO AND pvgctl1.AVAILABLE_BALANCE IS NOT NULL)
+GROUP BY
+    pvgcmbd.COMPANY_CODE,
+    pvgcmbd.GIFT_CARD_TYPE,
+    pvgcmbd.CARD_NO,
+    pvgcmbd.EXPIRY_DATE,
+    pvgcmbd.MOVEMENT_DATE;

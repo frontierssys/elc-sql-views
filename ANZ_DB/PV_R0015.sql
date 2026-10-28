@@ -1,0 +1,3 @@
+CREATE   VIEW  [dbo].[PV_R0015] AS
+select *
+from PMV_SALES_DETAIL_STORE_TENDER;

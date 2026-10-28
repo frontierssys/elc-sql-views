@@ -1,0 +1,4 @@
+CREATE   VIEW  PV_CLS_IMCAT_CAT as
+select COMPANY_CODE, BU_CODE ,
+    REPLACE( BU_DESC , ',', '') as BU_DESC
+from PM_BU pb

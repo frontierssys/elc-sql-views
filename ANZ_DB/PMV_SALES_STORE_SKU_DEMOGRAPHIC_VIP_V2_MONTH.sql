@@ -1,0 +1,16 @@
+CREATE   VIEW  PMV_SALES_STORE_SKU_DEMOGRAPHIC_VIP_V2_MONTH as
+select
+    'Consumer' as CUSTOMER_TYPE,
+    psssdv.*,
+    a.MEMO_COUNT as TX_COUNT,
+    a.ITEM_COUNT as ITEM_COUNT,
+    a.TX_AMOUNT as TX_AMT
+from
+    PXV_SALES_STORE_SKU_DEMOGRAPHIC_VIP_MONTH psssdv
+inner join PXV_SALES_STORE_SKU_DEMOGRAPHIC_TX_COUNT_VIP_MONTH a on
+    psssdv.COMPANY_CODE = a.COMPANY_CODE
+    and psssdv.LOCATION_CODE = a.LOCATION_CODE
+    and psssdv.TX_DATE = a.TX_DATE
+    and psssdv.SKU = a.SKU
+    and psssdv.DEMOGRAPHIC = a.DEMOGRAPHIC
+    and psssdv.SALE_OR_RETURN = a.SALE_OR_RETURN
